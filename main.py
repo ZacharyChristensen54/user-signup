@@ -16,7 +16,6 @@
 #
 import webapp2
 import re
-import os
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
@@ -38,9 +37,9 @@ def make_page(username_error='', pass_error='', verifypass_error='', email_error
                 </style>
             """
     
-    name_input = "<td><input type='text' id='username' value=%s></td>" % (username)
+    name_input = "<td><input type='text' name='username' value=%s></td>" % (username)
     name_label = "<td class='label'>Username</td>"
-    name_error = "<p class='error'>%s</p>" % (username_error)
+    name_error = "<td class='error'>%s</td>" % (username_error)
     username_table = ("<tr>" +
                       name_label +
                       name_input +
@@ -48,20 +47,27 @@ def make_page(username_error='', pass_error='', verifypass_error='', email_error
                       "</tr>")
     
     pass_label = "<td class='label'>Password</td>"
-    pass_input = "<td><input type='password' id='password' value=''></td>"
-    pass_retype = "<td><input type='password' id='verified_pass' value=''></td>"
-    pass_error = "<p class='error'>%s</p>" % (pass_error)
-    verify_error = "<p class='error'>%s</p>" % (verifypass_error)
+    pass_input = "<td><input type='password' name='password' value=''></td>"
+    pass_error = "<td class='error'>%s</td>" % (pass_error)
     password_table = ("<tr>" +
                       pass_label +
-                      pass_input + '<br/>' +
-                      pass_retype +
+                      pass_input +
                       pass_error +
                       "</tr>")
     
+    verifypass_label = "<td class='label'>Verify Password</td>"
+    verifypass_input = "<td><input type='password' name='verified_pass' value=''></td>"
+    verify_error = "<td class='error'>%s</td>" % (verifypass_error)
+    verifypass_table = ("<tr>" +
+                        verifypass_label +
+                        verifypass_input +
+                        verify_error +
+                        "</tr>")
+    
+    
     email_label = "<td class='email'>Email (optional)</td>"
-    email_input = "<td><input type='text' id='email' value=%s></td>" % (email)
-    email_error = "<p class='error'>%s</p>" % (email_error)
+    email_input = "<td><input type='text' name='email' value=%s></td>" % (email)
+    email_error = "<td class='error'>%s</td>" % (email_error)
     email_table = ("<tr>" +
                    email_label +
                    email_input +
@@ -72,7 +78,7 @@ def make_page(username_error='', pass_error='', verifypass_error='', email_error
 
     head = "<head>" + style + "</head>"
     header = "<h2>Signup</h2>"
-    content_table = "<table>" + username_table + password_table + email_table + "</table>"
+    content_table = "<table>" + username_table + password_table + verifypass_table + email_table + "</table>"
     form = "<form method='post'>" + content_table + input_button + "</form>"
     body = "<body>" + header + form + "</body>"
 
@@ -115,10 +121,17 @@ class Signup(webapp2.RequestHandler):
                                           params.get('error_verify', ''), 
                                           params.get('error_email', ''),
                                           username,
-                                          email))
+                                          email)
+                                          )
         else:
             self.redirect('/welcome?username=' + username)
 
+class Welcome(webapp2.RequestHandler):
+    def get(self):
+        username = self.request.get('username')
+        self.response.write("<h1>Welcome, %s!</h1>" % username)
+
 app = webapp2.WSGIApplication([
-    ('/', Signup)
+    ('/', Signup),
+    ('/welcome', Welcome)
 ], debug=True)
