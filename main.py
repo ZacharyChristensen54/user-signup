@@ -30,7 +30,7 @@ EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
-def make_page(error='', username='', password='', email=''):
+def make_page(username_error='', pass_error='', verifypass_error='', email_error='', username='', email=''):
     style = """
                 <style type="text/css">
                 .label {text-align: right}
@@ -40,7 +40,7 @@ def make_page(error='', username='', password='', email=''):
     
     name_input = "<td><input type='text' id='username' value=%s></td>" % (username)
     name_label = "<td class='label'>Username</td>"
-    name_error = "<p class='error'>%s</p>" % (error)
+    name_error = "<p class='error'>%s</p>" % (username_error)
     username_table = ("<tr>" +
                       name_label +
                       name_input +
@@ -50,7 +50,8 @@ def make_page(error='', username='', password='', email=''):
     pass_label = "<td class='label'>Password</td>"
     pass_input = "<td><input type='password' id='password' value=''></td>"
     pass_retype = "<td><input type='password' id='verified_pass' value=''></td>"
-    pass_error = "<p class='error'>%s</p>" % (error)
+    pass_error = "<p class='error'>%s</p>" % (pass_error)
+    verify_error = "<p class='error'>%s</p>" % (verifypass_error)
     password_table = ("<tr>" +
                       pass_label +
                       pass_input + '<br/>' +
@@ -60,7 +61,7 @@ def make_page(error='', username='', password='', email=''):
     
     email_label = "<td class='email'>Email (optional)</td>"
     email_input = "<td><input type='text' id='email' value=%s></td>" % (email)
-    email_error = "<p class='error'>%s</p>" % (error)
+    email_error = "<p class='error'>%s</p>" % (email_error)
     email_table = ("<tr>" +
                    email_label +
                    email_input +
@@ -78,47 +79,45 @@ def make_page(error='', username='', password='', email=''):
     full_page = "<!DOCTYPE html><html>" + head + body + "</html>"
 
     return full_page 
-                 
-                
-           
-
-
-
 
 class Signup(webapp2.RequestHandler):
 
     def get(self):
         self.response.write(make_page())
 
-    # def post(self):
-    #     have_error = False
-    #     username = self.request.get('username')
-    #     password = self.request.get('password')
-    #     verify = self.request.get('verified_pass')
-    #     email = self.request.get('email')
+    def post(self):
+        have_error = False
+        username = self.request.get('username')
+        password = self.request.get('password')
+        verify = self.request.get('verified_pass')
+        email = self.request.get('email')
 
-    #     params = dict(username = username,
-    #                   email = email)
+        params = dict()
 
-    #     if not valid_username(username):
-    #         params['error_username'] = "That's not a valid username."
-    #         have_error = True
+        if not valid_username(username):
+            params['error_username'] = "That's not a valid username."
+            have_error = True
 
-    #     if not valid_password(password):
-    #         params['error_password'] = "That wasn't a valid password."
-    #         have_error = True
-    #     elif password != verify:
-    #         params['error_verify'] = "Your passwords didn't match."
-    #         have_error = True
+        if not valid_password(password):
+            params['error_password'] = "That wasn't a valid password."
+            have_error = True
+        elif password != verify:
+            params['error_verify'] = "Your passwords didn't match."
+            have_error = True
 
-    #     if not valid_email(email):
-    #         params['error_email'] = "That's not a valid email."
-    #         have_error = True
+        if not valid_email(email):
+            params['error_email'] = "That's not a valid email."
+            have_error = True
 
-    #     if have_error:
-    #         self.render('signup-form.html', **params)
-    #     else:
-    #         self.redirect('/welcome?username=' + username)
+        if have_error:
+            self.response.write(make_page(params.get('error_username',''),
+                                          params.get('error_password', ''), 
+                                          params.get('error_verify', ''), 
+                                          params.get('error_email', ''),
+                                          username,
+                                          email))
+        else:
+            self.redirect('/welcome?username=' + username)
 
 app = webapp2.WSGIApplication([
     ('/', Signup)
